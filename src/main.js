@@ -27,5 +27,5 @@ module.exports = function(source) {
 };
 
 function generateRequireStringFromEntity(entity) {
-    return "require('" + path.resolve(b.path) + "');\n";
+    return "require('" + path.resolve(entity.path) + "');\n";
 }
