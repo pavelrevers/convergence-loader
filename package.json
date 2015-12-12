@@ -1,0 +1,17 @@
+{
+  "author": "pavelrevers",
+  "name": "convergence-loader",
+  "version": "0.1.0",
+  "main": "src/main.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:pavelrevers/convergence-loader.git"
+  },
+  "engines": {
+    "node": ">=0.10"
+  },
+  "dependencies": {
+    "convergence": "git://github.com/corpix/convergence.git",
+    "loader-utils": "^0.2.11"
+  }
+}
