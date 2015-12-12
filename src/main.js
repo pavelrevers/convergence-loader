@@ -18,6 +18,22 @@ module.exports = function(source) {
     })
         .then(
             function (data) {
+                var jsString = '';
+console.log(techs)
+                if (techs.indexOf('yate') >= 0) {
+                    console.log('2')
+                    var fs = require('fs');
+                    var fileName = loaderUtils.getRemainingRequest(this) + '.yate';
+
+                    fs.writeSync(fileName, data.filter(function (b) {
+                        return techs.indexOf('yate') >= 0;
+                    }).map(generateIncludeStringFromEntity).join(''));
+                }
+
+                var jsString = data.filter(function (b) {
+                    return techs.indexOf(b.tech) >= 0;
+                }).map(generateRequireStringFromEntity).join('')
+
                 callback(null, data.filter(function (b) {
                     return techs.indexOf(b.tech) >= 0;
                 }).map(generateRequireStringFromEntity).join(''));
@@ -28,4 +44,8 @@ module.exports = function(source) {
 
 function generateRequireStringFromEntity(entity) {
     return "require('" + path.resolve(entity.path) + "');\n";
+}
+
+function generateIncludeStringFromEntity(entity) {
+    return 'include "' + path.resolve(entity.path) + '"\n';
 }
