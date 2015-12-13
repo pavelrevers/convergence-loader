@@ -9,30 +9,24 @@ module.exports = function(source) {
     var callback = this.async();
     var loaderOptions = loaderUtils.parseQuery(this.query);
     var techs = loaderOptions.techs;
+    var file = loaderUtils.getRemainingRequest(this);
 
     convergence({
         decls: [
-            loaderUtils.getRemainingRequest(this)
+            file
         ],
         levels: loaderOptions.levels
     })
         .then(
             function (data) {
-                var jsString = '';
-console.log(techs)
                 if (techs.indexOf('yate') >= 0) {
-                    console.log('2')
                     var fs = require('fs');
-                    var fileName = loaderUtils.getRemainingRequest(this) + '.yate';
+                    var fileName = file + '.yate';
 
                     fs.writeSync(fileName, data.filter(function (b) {
-                        return techs.indexOf('yate') >= 0;
+                        return b.tech === 'yate';
                     }).map(generateIncludeStringFromEntity).join(''));
                 }
-
-                var jsString = data.filter(function (b) {
-                    return techs.indexOf(b.tech) >= 0;
-                }).map(generateRequireStringFromEntity).join('')
 
                 callback(null, data.filter(function (b) {
                     return techs.indexOf(b.tech) >= 0;
