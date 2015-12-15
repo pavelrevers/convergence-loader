@@ -12,9 +12,7 @@ module.exports = function(source) {
     var file = loaderUtils.getRemainingRequest(this);
 
     convergence({
-        decls: [
-            file
-        ],
+        decls: [file],
         levels: loaderOptions.levels
     })
         .then(
@@ -23,7 +21,7 @@ module.exports = function(source) {
                     var fs = require('fs');
                     var fileName = file + '.yate';
 
-                    fs.writeSync(fileName, data.filter(function (b) {
+                    fs.writeFileSync(fileName, data.filter(function (b) {
                         return b.tech === 'yate';
                     }).map(generateIncludeStringFromEntity).join(''));
                 }
