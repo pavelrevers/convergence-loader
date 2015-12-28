@@ -11,7 +11,8 @@
     "node": ">=0.10"
   },
   "dependencies": {
-    "convergence": "git://github.com/corpix/convergence.git",
+    "@bem/deps": "0.0.10",
+    "bemdecl-to-fs": "0.0.3",
     "loader-utils": "^0.2.11"
   }
 }
