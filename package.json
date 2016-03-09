@@ -11,8 +11,8 @@
     "node": ">=0.10"
   },
   "dependencies": {
-    "@bem/deps": "0.0.10",
-    "bemdecl-to-fs": "0.0.3",
+    "enb": "^1.2.0",
+    "enb-bem-techs": "^2.2.1",
     "loader-utils": "^0.2.11"
   }
 }
