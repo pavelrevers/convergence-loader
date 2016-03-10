@@ -2,72 +2,61 @@ var path = require('path');
 
 var loaderUtils = require('loader-utils');
 
-const bemdeclToFs = require('bemdecl-to-fs');
-
-var bemDeps = require('@bem/deps');
+const OldDeps = require('enb-bem-techs/exlib/deps-old').OldDeps;
+const Level = require('enb-bem-techs/lib/levels/level');
+const Levels = require('enb-bem-techs/lib/levels/levels');
 
 module.exports = function(source) {
     this.cacheable();
     var callback = this.async();
     var loaderOptions = loaderUtils.parseQuery(this.query);
+    var file = loaderUtils.getRemainingRequest(this);
     var techs = loaderOptions.techs;
-    var decl = this.exec(source, this.resourcePath).deps;
-    var levels = loaderOptions.levels;
+    var bemdecl = this.exec(source, this.resourcePath);
+    var levels = new Levels(loaderOptions.levels.map(function (path) {
+        var level = new Level(path);
+        level.load();
+        return level;
+    }));
 
-    getRelations(levels)
-        .then(function (relations) {
-            var res = bemDeps.resolve(decl, relations, { tech: techs });
+    new OldDeps(bemdecl.blocks || bemdecl.deps).expandByFS({levels: levels}).then(function (resolvedDeps) {
+        var files = resolvedDeps.getDeps().map(function (dep) {
+            if (dep.elem) {
+                return levels.getElemFiles(dep.block, dep.elem, dep.mod, dep.val || '');
+            } else {
+                return levels.getBlockFiles(dep.block, dep.mod, dep.val || '');
+            }
+        });
 
-            return bemdeclToFs(res.entities, levels, techs);
-        })
-        .then(function (files) {
-            callback(null, files.map(generateRequireStringFromFilePath).join('\n'));
-        }).catch(console.log);
+        if (true) {
+            var fs = require('fs');
+            var fileName = file.split('.bemdecl.js')[0] + '.yate';
+
+            fs.writeFileSync(fileName, files.map(generateIncludeStringFromEntity).join(''));
+        }
+
+        callback(null, files.map(generateRequireStringFromFilePath).join(''));
+    }, function () {
+        console.log(arguments);
+    })
 };
 
-function generateRequireStringFromFilePath(filePath) {
-    return "require('" + path.resolve(filePath) + "');";
+function generateRequireStringFromFilePath(all) {
+    return all.reduce(function (string, file) {
+        if (file.suffix === 'js' || file.suffix === 'css') {
+            return string + "require('" + path.resolve(file.fullname) + "');";
+        } else {
+            return string;
+        }
+    }, '');
 }
 
-function generateIncludeStringFromEntity(entity) {
-    return 'include "' + path.resolve(entity.path) + '"\n';
-}
-
-function getRelations(levels) {
-    var stream = bemDeps.load({ levels: levels });
-
-    return new Promise(function (resolve, reject) {
-        // stream is already ended
-        if (!stream.readable) return resolve([]);
-
-        var arr = [];
-
-        stream.on('data', onData);
-        stream.on('end', onEnd);
-        stream.on('error', onEnd);
-        stream.on('close', onClose);
-
-        function onData(doc) {
-            arr.push(doc)
+function generateIncludeStringFromEntity(all) {
+    return all.reduce(function (string, file) {
+        if (file.suffix === 'yate') {
+            return string + 'include "' + path.resolve(file.fullname) + '"\n';
+        } else {
+            return string;
         }
-
-        function onEnd(err) {
-            if (err) reject(err);
-            else resolve(arr);
-            cleanup();
-        }
-
-        function onClose() {
-            resolve(arr);
-            cleanup();
-        }
-
-        function cleanup() {
-            arr = null;
-            stream.removeListener('data', onData);
-            stream.removeListener('end', onEnd);
-            stream.removeListener('error', onEnd);
-            stream.removeListener('close', onClose);
-        }
-    }).catch(console.log)
+    }, '');
 }
